@@ -10,7 +10,8 @@ defmodule EDIB.BuildConfig.Artifact.Builder do
     |> maybe_artifact_config
     |> set_edib_tool
     |> set_settings
-    |> set_volumes
+    # |> set_volumes # disable all default and custom volumes!
+    |> set_volumes_from
     |> set_priv_flag
     |> set_rm_flag
     |> set_docker_command
@@ -38,6 +39,12 @@ defmodule EDIB.BuildConfig.Artifact.Builder do
     {:ok, config, [Volumes.to_docker_options(volumes) | command_list]}
   end
   defp set_volumes(error), do: error
+
+  defp set_volumes_from({:ok, config, command_list}) do
+    volumes_from = "--volumes-from build_context"
+    {:ok, config, [volumes_from | command_list]}
+  end
+  defp set_volumes_from(error), do: error
 
   defp set_priv_flag({:ok, %{privileged: priv_flag} = config, command_list}) do
     {:ok, config, [ maybe_set_priv_flag(priv_flag) | command_list]}
