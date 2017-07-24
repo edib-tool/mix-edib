@@ -22,8 +22,11 @@ defmodule EDIB.Runner do
     |> EDIB.Runner.Log.reinit
     |> info_edib_tool
     |> package_processing_info
+    |> pre_command
     |> EDIB.Runner.ArtifactBuilder.run
+    |> inter_command
     |> EDIB.Runner.ImageBuilder.run
+    |> post_command
     |> success_or_error!
   end
 
@@ -41,6 +44,23 @@ defmodule EDIB.Runner do
     state
   end
   defp package_processing_info(error), do: error
+
+  def pre_command({_, _, options} = state) do
+    do_cmd("docker rm -f build_context", options.writer)
+    do_cmd("docker create --name build_context --volume /source --volume /stage/tarballs busybox", options.writer)
+    do_cmd("tar -c -C `pwd` . | docker cp - build_context:/source", options.writer)
+    state
+  end
+
+  def inter_command({_, _, options} = state) do
+    do_cmd("docker cp build_context:/stage/tarballs ./tarballs", options.writer)
+    state
+  end
+
+  def post_command({_, _, options}) do
+    do_cmd("docker rm build_context", options.writer)
+    {:ok, :post_command, :end}
+  end
 
   defp success_or_error!({:ok, _, _}) do
     info("Packaging was successful! \\o/")

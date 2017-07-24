@@ -59,7 +59,7 @@ defmodule EDIB.Runner.ImageBuilder do
   defp after_run_command(_, command, state),
     do: {:error, "Image command '#{command}' failed", state}
 
-  defp package_summary({:ok, _msg, {config, _options}}) do
+  defp package_summary({:ok, _msg, {config, options}}) do
     tagged_name = ~s(#{config.name}:#{config.tag})
     latest_name = ~s(#{config.name}:latest)
     info("Docker image created: #{tagged_name} (#{latest_name})")
@@ -76,8 +76,7 @@ defmodule EDIB.Runner.ImageBuilder do
 
     """
     print(usage_info)
-
-    {:ok, :summary, :end}
+    {:ok, :summary, options}
   end
   defp package_summary(error), do: error
 end
